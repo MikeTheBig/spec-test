@@ -3,6 +3,7 @@ import Header from '../components/Header'
 import Chart from '../components/Chart'
 import { STOCKS } from '../data/stocks'
 import { generateHistory } from '../lib/history'
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 export default function History(){
   const [symbol, setSymbol] = useState(STOCKS[0].symbol)
@@ -15,14 +16,46 @@ export default function History(){
   useEffect(() => {
     setPoints(generateHistory(stock, minutes))
   }, [stock, minutes])
+  const [prices, setPrices] = useState<Record<string, number>>({})
+
+  // Fetch current prices (client) and apply small jitter so the UI isn't static
+  async function fetchPrices(){
+    try{
+      const r = await fetch(`${API}/api/stocks`)
+      if (!r.ok) return
+      const arr = await r.json()
+      const map: Record<string, number> = {}
+      for (const s of arr) map[s.symbol] = Number(s.price)
+      for (const k of Object.keys(map)){
+        const pct = (Math.random() - 0.5) * 0.01
+        map[k] = Number((map[k] * (1 + pct)).toFixed(2))
+      }
+      setPrices(map)
+    } catch(e){ console.error('fetchPrices error', e) }
+  }
+
+  useEffect(()=>{
+    fetchPrices()
+    const id = setInterval(()=>fetchPrices(), 5000)
+    return ()=>clearInterval(id)
+  }, [])
+
+  // Generate history on the client only to avoid SSR/client hydration mismatch (random data)
+  useEffect(() => {
+    // if we have a fetched price for the symbol, override the stock.price used to generate history
+    const base = STOCKS.find(s => s.symbol === stock.symbol) || STOCKS[0]
+    const price = (prices[stock.symbol] ?? base.price)
+    const stockWithPrice = { ...base, price }
+    setPoints(generateHistory(stockWithPrice, minutes))
+  }, [stock, minutes, prices])
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-8">
         <section className="mb-6">
-          <h1 className="text-3xl font-bold">History — Last 10 minutes</h1>
-          <p className="text-slate-400 mt-2">Select a symbol to view mock minute-by-minute price history for the last 10 minutes.</p>
+          <h1 className="text-3xl font-bold">History — Last {minutes} minutes</h1>
+          <p className="text-slate-400 mt-2">Select a symbol to view mock minute-by-minute price history for the last {minutes} minutes.</p>
         </section>
 
         <section className="bg-slate-800/50 rounded-lg p-6">
@@ -46,15 +79,15 @@ export default function History(){
 
           <div className="grid grid-cols-3 gap-4 mt-4 text-slate-200 items-center">
             <div>
-              <h3 className="font-semibold">Start (10m ago)</h3>
-              <p className="text-lg">${points.length ? points[0].price.toFixed(2) : stock.price.toFixed(2)}</p>
+              <h3 className="font-semibold">Start ({minutes}m ago)</h3>
+              <p className="text-lg">${points.length ? points[0].price.toFixed(2) : (prices[stock.symbol] ?? stock.price).toFixed(2)}</p>
             </div>
             <div>
               <h3 className="font-semibold">Current</h3>
-              <p className="text-lg">${stock.price.toFixed(2)}</p>
+              <p className="text-lg">${points.length ? points[points.length - 1].price.toFixed(2) : (prices[stock.symbol] ?? stock.price).toFixed(2)}</p>
             </div>
             <div>
-              <h3 className="font-semibold">Change (10m)</h3>
+              <h3 className="font-semibold">Change ({minutes}m)</h3>
               {
                 (() => {
                   const start = points.length ? points[0].price : stock.price

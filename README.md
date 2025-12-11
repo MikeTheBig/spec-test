@@ -17,5 +17,5 @@ npm run export
 ```
 
 ## Notes
-- The `data/stocks.ts` file contains the mocked dataset; replace it with an API call if you want real data.
+- The `data/stocks.ts` file contains the mocked dataset.
 - Site is responsive and accessible with semantic table markup.
