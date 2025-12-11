@@ -1,50 +1,47 @@
 # [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+
+Minimal constitution with the bare minimum requirements for a static web application.
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Static-first
+The application must be deployable as static assets (HTML, CSS, JS, images). Any dynamic behavior must be implemented client-side or pre-rendered at build time.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Reproducible build
+Provide a single documented build/preview command (for example `npm run build` or `npm start`) that produces deterministic output into a named directory (`dist/` or `build/`). Commit lockfiles and document required runtimes.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Performance & accessibility baseline
+Deliver lightweight pages and basic accessibility. At minimum: assets are cacheable, critical CSS/JS kept small, and automated a11y linting is run on critical pages in CI.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Security and secrets
+No secrets or credentials in source. Any runtime secrets must be injected by the hosting environment and never committed. Follow basic security headers (CSP) where possible.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. CI/CD & gated deployments
+All changes merged to the main branch must pass automated checks: install, lint, type-check (if applicable), build, and tests. Deployments to production must be automated and gated on CI success.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### VI. Simplicity and maintainability
+Prefer minimal dependencies and clear documentation. Major framework changes require justification and a migration plan in the PR.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+## Project structure (minimum)
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- `src/` — source files (optional for very small projects)
+- `public/` or `static/` — static assets (images, fonts)
+- `index.html`, `about.html`, `faq.html` — required pages for this project
+- `css/`, `js/` — styles and client scripts
+- `dist/` or `build/` — build output (generated)
+- `package.json` and lockfile — scripts and pinned deps
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Followable conventions: clear entry points and a documented start/build command in `package.json`.
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+## Development workflow & quality gates
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- Pull requests must include a short description and link to preview when available.
+- Required CI checks (minimal):
+	- Install dependencies
+	- Lint (HTML/CSS/JS)
+	- Type check (if TypeScript used)
+	- Build (must succeed)
+	- Basic unit/component tests (where applicable)
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+
+**Version**: 1.0.0 | **Ratified**: 2025-12-10 | **Last Amended**: 2025-12-10
