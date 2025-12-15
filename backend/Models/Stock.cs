@@ -6,4 +6,6 @@ public class Stock
     public string Symbol { get; set; } = string.Empty;
     public string Company { get; set; } = string.Empty;
     public decimal Price { get; set; }
+
+    public ICollection<Order> Orders { get; set; } = new List<Order>();
 }

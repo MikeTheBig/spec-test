@@ -30,7 +30,14 @@ export default function Header(){
           <Link href="/about" className="text-slate-300 hover:text-white">About</Link>
           <Link href="/faq" className="text-slate-300 hover:text-white">FAQ</Link>
           <Link href="/history" className="text-slate-300 hover:text-white">History</Link>
-          <Link href="/stocks" className="text-slate-300 hover:text-white">Stocks</Link>
+          {user && (
+            <>
+            <Link href="/stocks" className="text-slate-300 hover:text-white">Stocks</Link>
+            <Link href="/orders" className="text-slate-300 hover:text-white">Orders</Link>
+            <Link href="/portfolio" className="text-slate-300 hover:text-white">Portfolio</Link>
+            </>
+          )}
+          
           {user ? (
             <button onClick={logout} className="ml-3 px-3 py-1 bg-red-600 text-white rounded">Logout</button>
           ) : (
@@ -42,8 +49,8 @@ export default function Header(){
         </nav>
       </div>
 
-      {showLogin && <LoginForm onClose={()=>setShowLogin(false)} />}
       {showRegister && <RegisterForm onClose={()=>setShowRegister(false)} />}
+      {showLogin && <LoginForm onClose={()=>setShowLogin(false)} />}
     </header>
   )
 }

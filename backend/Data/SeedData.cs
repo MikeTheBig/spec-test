@@ -14,7 +14,7 @@ public static class SeedData
             new Stock { Symbol = "NVDA", Company = "NVIDIA Corp.", Price = 540.11m },
             new Stock { Symbol = "TSLA", Company = "Tesla, Inc.", Price = 242.55m },
             new Stock { Symbol = "META", Company = "Meta Platforms", Price = 331.22m },
-            new Stock { Symbol = "JPM", Company = "JPMorgan Chase", Price = 139.5m },
+            new Stock { Symbol = "NOVO", Company = "Novo Nordisk", Price = 139.5m },
             new Stock { Symbol = "V", Company = "Visa Inc.", Price = 245.66m },
             new Stock { Symbol = "DIS", Company = "The Walt Disney Co.", Price = 94.11m }
         };

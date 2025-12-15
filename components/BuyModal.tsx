@@ -1,27 +1,76 @@
 import Modal from './Modal'
 import { useState, useEffect } from 'react'
-import { getUserId, buyHolding, getBalanceFor } from '../lib/portfolio'
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 export default function BuyModal({ symbol, price, onClose, onDone } : { symbol:string; price:number; onClose: ()=>void; onDone: ()=>void }){
   const [qty, setQty] = useState(1)
-  const userId = getUserId()
   const [balance, setBalance] = useState<number | null>(null)
 
-  useEffect(()=>{
-    if (!userId) return
-    setBalance(getBalanceFor(userId))
-  }, [userId])
+  async function fetchBalance() {
+    const token = localStorage.getItem('mv_jwt')
+    if (!token) return
+
+    try {
+      const r = await fetch(`${API}/api/orders/balance`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (r.ok) {
+        const data = await r.json()
+        setBalance(data.balance)
+      }
+    } catch (error) {
+      console.error('Failed to fetch balance:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchBalance()
+  }, [])
 
   async function buy(e:any){
     e.preventDefault()
-    if (!userId) return alert('please login')
+    
+    const token = localStorage.getItem('mv_jwt')
+    if (!token) {
+      alert('Please log in')
+      return
+    }
+    
     const cost = Number(qty) * price
-    const bal = getBalanceFor(userId) ?? 0
-    if (cost > bal) return alert('Insufficient balance')
-    const res: any = buyHolding(userId, symbol, Number(qty), price)
-    if (!res.ok) return alert(res.error || 'buy failed')
-    onDone()
-    onClose()
+    const bal = balance ?? 0
+    if (cost > bal) {
+      alert('Insufficient balance')
+      return
+    }
+
+    try {
+      const r = await fetch(`${API}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          symbol,
+          quantity: Number(qty),
+          price: price
+        })
+      })
+
+      if (r.ok) {
+        alert('Order placed successfully!')
+        onDone()
+        onClose()
+      } else {
+        const errorText = await r.text()
+        console.error('Buy failed:', errorText)
+        alert('Buy failed: ' + errorText)
+      }
+    } catch (error) {
+      console.error('Buy error:', error)
+      alert('Buy failed - network error')
+    }
   }
 
   return (
@@ -31,7 +80,7 @@ export default function BuyModal({ symbol, price, onClose, onDone } : { symbol:s
         <div>Price: ${price}</div>
         <div className="text-sm">Total: <span className="font-semibold">${(Number(qty) * price).toFixed(2)}</span></div>
         {balance !== null && (
-          <div className="text-sm text-slate-600">Balance: ${balance} • After: {(Math.max(0, (balance - (Number(qty) * price)))).toFixed(2)}</div>
+          <div className="text-sm text-slate-600">Balance: ${balance.toFixed(2)} • After: ${(Math.max(0, (balance - (Number(qty) * price)))).toFixed(2)}</div>
         )}
         {balance !== null && balance >= 0 && (
           <div className="text-xs text-slate-500">Max purchasable: {Math.max(0, Math.floor(balance / price))} shares</div>

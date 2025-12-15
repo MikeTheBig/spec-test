@@ -26,10 +26,6 @@ export default function History(){
       const arr = await r.json()
       const map: Record<string, number> = {}
       for (const s of arr) map[s.symbol] = Number(s.price)
-      for (const k of Object.keys(map)){
-        const pct = (Math.random() - 0.5) * 0.01
-        map[k] = Number((map[k] * (1 + pct)).toFixed(2))
-      }
       setPrices(map)
     } catch(e){ console.error('fetchPrices error', e) }
   }

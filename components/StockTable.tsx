@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Stock } from '../data/stocks'
 
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+
 type Props = { initial: Stock[] }
 
 function formatNumber(n: number){
@@ -11,23 +13,29 @@ function formatNumber(n: number){
 }
 
 export default function StockTable({ initial }: Props){
-  const [stocks, setStocks] = useState<Stock[]>(initial)
+  const [stocks, setStocks] = useState<Stock[]>([])
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<keyof Stock | null>(null)
   const [dir, setDir] = useState<1 | -1>(1)
 
-  useEffect(() => { setStocks(initial) }, [initial])
+  async function fetchStocks(){
+  try{
+    const r = await fetch(`${API}/api/stocks`)
+    if (!r.ok) return
+    const data = await r.json()
+    setStocks(data.map((s: any) => ({
+      ...s,
+      marketCap: s.marketCap || 1000000000,
+      volume: s.volume || 10000000
+    })))
+  } catch(e){ console.error('fetchStocks error', e) }
+}
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      setStocks(prev => prev.map(s => {
-        const change = (Math.random() - 0.5) * (s.price * 0.004)
-        const price = Math.max(0.01, s.price + change)
-        return { ...s, price, change, changePercent: (change/price) * 100 }
-      }))
-    }, 3000)
-    return () => clearInterval(id)
-  }, [])
+useEffect(() => {
+  fetchStocks()
+  const id = setInterval(() => fetchStocks(), 60000) // Opdater hvert minut
+  return () => clearInterval(id)
+}, [])
 
   // Improved sorting: compute new direction locally to avoid relying on async state
   function onSort(key: keyof Stock){
@@ -44,11 +52,7 @@ export default function StockTable({ initial }: Props){
   }
 
   function onRefresh(){
-    setStocks(prev => prev.map(s => {
-      const change = (Math.random() - 0.45) * (s.price * 0.02)
-      const price = Math.max(0.01, s.price + change)
-      return { ...s, price, change, changePercent: (change/price) * 100 }
-    }))
+    fetchStocks()
   }
 
   const filtered = useMemo(() => {
@@ -115,8 +119,12 @@ export default function StockTable({ initial }: Props){
                 <td className="py-3 font-semibold">{s.symbol}</td>
                 <td className="py-3">{s.company}</td>
                 <td className="py-3">${s.price.toFixed(2)}</td>
-                <td className={`py-3 ${s.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}</td>
-                <td className={`py-3 ${s.changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{s.changePercent >= 0 ? '+' : ''}{s.changePercent.toFixed(2)}%</td>
+                <td className={`py-3 ${(s.change ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+  {(s.change ?? 0) >= 0 ? '+' : ''}{(s.change ?? 0).toFixed(2)}
+</td>
+  <td className={`py-3 ${(s.changePercent ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+  {(s.changePercent ?? 0) >= 0 ? '+' : ''}{(s.changePercent ?? 0).toFixed(2)}%
+</td>
                 <td className="py-3 hidden md:table-cell">{formatNumber(s.marketCap)}</td>
                 <td className="py-3 hidden md:table-cell">{formatNumber(s.volume)}</td>
               </tr>
@@ -125,7 +133,7 @@ export default function StockTable({ initial }: Props){
         </table>
       </div>
 
-      <p className="text-slate-400 text-sm mt-3">Data is mocked and for demonstration only.</p>
+      <p className="text-slate-400 text-sm mt-3">Data is comming from Yahoo Finanse.</p>
     </div>
   )
 }
